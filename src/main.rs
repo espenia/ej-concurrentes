@@ -1,48 +1,71 @@
-use std::thread;
-use std::time::{Duration, Instant};
-use std::{error::Error, io, process};
+use std::{fs, collections::HashMap};
+use std::time::Instant;
+use std::error::Error;
+use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
 
-#[derive(Debug,serde:Deserialize)]
+#[derive(Debug)]
 struct Video {
-    video_id: String,
-    trending_date: Date,
-    title: String,
     channel_title: String,
-    category_id: i32,
-    publish_time: Date,
-    tags: String,
-    views: i32,
-    likes: i32,
-    dislikes: i32,
-    comment_count: i32,
-    thumbnail_link: String,
-    comments_disabled: bool,
-    ratings_disabled: bool,
-    video_error_or_removed: bool,
-    description: String
+    views: i64,
 }
 
 fn main() {
+    let start : Instant = Instant::now();
+    let dirs : Vec<String> = fs::read_dir("./archive").unwrap().map(|res| {
+        res.unwrap().path().to_str().unwrap().to_string()
+    }).collect(); 
+    
+    let result = dirs.par_iter().flat_map(|dir| {
+        get_data(dir.to_string())
+    }).map(|data| {
+        let mut map : HashMap<String, i64> = HashMap::new();
+        for value in data {
+            map = get_count_from_data(value, map);
+        }
+        map
+    }).reduce(|| HashMap::new(), |mut acc, counts| {
+        for (key, value) in counts {
+            let channel = acc.entry(key).or_insert_with(|| value);
+            *channel += value;
+        }
+        acc
+    }); 
 
-    let data = get_data();
-    let data = [7, 3, 2, 16, 24, 4, 11, 9];
-
-    rayon::ThreadPoolBuilder::new().build_global();
-
-    let start = Instant::now();
+    // let result = dirs.iter().flat_map(|dir| {
+    //     get_data(dir.to_string())
+    // }).map(|data| {
+    //     let mut map : HashMap<String, i64> = HashMap::new();
+    //     for value in data {
+    //         map = get_count_from_data(value, map);
+    //     }
+    //     map
+    // }).fold(HashMap::new() , |mut acc, counts| {
+    //     for (key, value) in counts {
+    //         let channel = acc.entry(key).or_insert_with(|| value);
+    //         *channel += value;
+    //     }
+    //     acc
+    // }); 
     println!("{:?}", start.elapsed());
 
-    println!("{:?}", merged);
+    //println!("{:?}", result);
+}
+
+fn get_count_from_data(data : Video, mut map : HashMap<String, i64>) -> HashMap<String, i64> {
+    let channel = map.entry(data.channel_title).or_insert_with(|| 0);
+    *channel += data.views;
+    return map;
 }
 
 
-fn get_data() -> Result<Vec<Video>, Box<dyn Error>> {
+fn get_data(dir : String) -> Result<Vec<Video>, Box<dyn Error>> {
     let mut data : Vec<Video> = vec![];
-    let mut rdr = csv::Reader::from_reader("../data/USvideos.csv");
-    for result in rdr.desirialize() {
-        let video: Video = result?;
+    let mut rdr = csv::Reader::from_path(dir)?;
+    for result in rdr.records() {
+        let res = result?;
+        let video: Video = Video { channel_title: String::from(&res[3]), views: res[7].parse::<i64>().unwrap() };
         data.push(video);
     }
-    return data;
+    return Ok(data);
 }

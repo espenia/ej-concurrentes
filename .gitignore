@@ -1,3 +1,7 @@
 /target
 
 archive/
+
+.idea/
+
+.vscode/
