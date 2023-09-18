@@ -7,3 +7,7 @@ archive/
 .vscode/
 
 ej2/target/
+
+ejAsync/target/
+
+idleGame/target/
