@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 uuid = {version = "1.4.1", features = ["v4"]}
-futures = "0.3" 
+futures = "0.3"
+std-semaphore= "0.1.0"
 # tokio = { version = "1.32.0", features = ["full"] }

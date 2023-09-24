@@ -19,6 +19,7 @@ name = "ej_2"
 version = "0.1.0"
 dependencies = [
  "futures",
+ "std-semaphore",
  "uuid",
 ]
 
@@ -172,6 +173,12 @@ checksum = "8f92a496fb766b417c996b9c5e57daf2f7ad3b0bebe1ccfca4856390e3d3bb67"
 dependencies = [
  "autocfg",
 ]
+
+[[package]]
+name = "std-semaphore"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33ae9eec00137a8eed469fb4148acd9fc6ac8c3f9b110f52cd34698c8b5bfa0e"
 
 [[package]]
 name = "syn"
